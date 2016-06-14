@@ -5,6 +5,39 @@ function $extend(from, fields) {
 	if( fields.toString !== Object.prototype.toString ) proto.toString = fields.toString;
 	return proto;
 }
+var Game = function(stageWidth,stageHeight) {
+	this.canRun = false;
+	PIXI.Container.call(this);
+	this.stageWidth = stageWidth;
+	this.stageHeight = stageHeight;
+	this.init();
+};
+Game.__super__ = PIXI.Container;
+Game.prototype = $extend(PIXI.Container.prototype,{
+	init: function() {
+		this.entities = [];
+		var background = new ScrollingBackground(PIXI.Texture.fromImage("assets/blue_desert.png"),1024,1024);
+		background.position.set(0,-448);
+		background.setSpeed(-50.0,0.0);
+		this.entities.push(background);
+		this.addChild(background);
+		var ground = new ScrollingBackground(PIXI.Texture.fromImage("assets/ground.png"),1024,70);
+		ground.position.set(0,this.stageHeight - 70);
+		ground.setSpeed(-100.0,0.0);
+		this.entities.push(ground);
+		this.addChild(ground);
+	}
+	,update: function(deltaTime) {
+		if(!this.canRun) return;
+		var _g = 0;
+		var _g1 = this.entities;
+		while(_g < _g1.length) {
+			var obj = _g1[_g];
+			++_g;
+			obj.update(deltaTime);
+		}
+	}
+});
 var pixi_plugins_app_Application = function() {
 	this._animationFrameId = null;
 	this.pixelRatio = 1;
@@ -108,6 +141,8 @@ pixi_plugins_app_Application.prototype = {
 	}
 };
 var Main = function() {
+	this.lastElapsed = 0.0;
+	this.dt = 0.0;
 	pixi_plugins_app_Application.call(this);
 	this.init();
 };
@@ -119,24 +154,24 @@ Main.prototype = $extend(pixi_plugins_app_Application.prototype,{
 	init: function() {
 		this.width = 1024;
 		this.height = 576;
-		this.backgroundColor = 3355443;
+		this.backgroundColor = 0;
 		this.pixelRatio = 1;
 		this.transparent = true;
 		this.antialias = false;
-		this.onUpdate = $bind(this,this.update);
+		this.onUpdate = $bind(this,this._onUpdate);
 		pixi_plugins_app_Application.prototype.start.call(this,"auto");
 		this.renderer.view.style.position = "absolute";
 		this.renderer.view.style.left = "50%";
-		this.renderer.view.style.top = "50%";
-		this.renderer.view.style.transform = "translate3d( -50%, -50%, 0 )";
-		var gfx = new PIXI.Graphics();
-		gfx.position.set(0,0);
-		gfx.beginFill(3355443,1.0);
-		gfx.drawRect(0,0,this.stage.width,this.stage.height);
-		gfx.endFill();
-		this.stage.addChild(gfx);
+		this.renderer.view.style.top = "25%";
+		this.renderer.view.style.transform = "translate3d( -50%, -25%, 0 )";
+		this.game = new Game(this.width,this.height);
+		this.stage.addChild(this.game);
+		this.game.canRun = true;
 	}
-	,update: function(elapsedTime) {
+	,_onUpdate: function(elapsedTime) {
+		this.dt = (elapsedTime - this.lastElapsed) / 1000.0;
+		this.lastElapsed = elapsedTime;
+		this.game.update(this.dt);
 	}
 });
 var Perf = $hx_exports.Perf = function(pos,offset) {
@@ -341,6 +376,25 @@ Reflect.field = function(o,field) {
 Reflect.callMethod = function(o,func,args) {
 	return func.apply(o,args);
 };
+var Updatable = function() { };
+var ScrollingBackground = function(texture,width,height) {
+	PIXI.extras.TilingSprite.call(this,texture,width,height);
+	this.speedX = this.speedY = 0.0;
+};
+ScrollingBackground.__interfaces__ = [Updatable];
+ScrollingBackground.__super__ = PIXI.extras.TilingSprite;
+ScrollingBackground.prototype = $extend(PIXI.extras.TilingSprite.prototype,{
+	setSpeed: function(x,y) {
+		if(y == null) y = 0.0;
+		if(x == null) x = 0.0;
+		this.speedX = x;
+		this.speedY = y;
+	}
+	,update: function(deltaTime) {
+		this.tilePosition.x += this.speedX * deltaTime;
+		this.tilePosition.y += this.speedY * deltaTime;
+	}
+});
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
 pixi_plugins_app_Application.AUTO = "auto";

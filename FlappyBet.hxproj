@@ -16,8 +16,8 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
-    <class path="C:\HaxeToolkit\haxe\lib\pixijs\3,1,2\src" />
-    <class path="C:\HaxeToolkit\haxe\lib\perf,js\1,1,8\src" />
+    <class path="libs\perf.js" />
+    <class path="libs\pixi" />
   </classpaths>
   <!-- Build options -->
   <build>

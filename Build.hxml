@@ -1,0 +1,5 @@
+-main Main
+-js bin/FlappyBet.js
+-cp src
+-lib pixijs
+-lib perf.js
