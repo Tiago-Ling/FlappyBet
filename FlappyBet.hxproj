@@ -16,8 +16,6 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
-    <class path="libs\perf.js" />
-    <class path="libs\pixi" />
   </classpaths>
   <!-- Build options -->
   <build>
@@ -30,7 +28,8 @@
   </build>
   <!-- haxelib libraries -->
   <haxelib>
-    <!-- example: <library name="..." /> -->
+    <library name="-lib pixijs" />
+    <library name="-lib perf.js" />
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>

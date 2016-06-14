@@ -1,6 +1,8 @@
 package;
+import pixi.core.math.Point;
 import pixi.core.textures.Texture;
 import pixi.extras.TilingSprite;
+import Updatable.Overlap;
 
 /**
  * ...
@@ -8,24 +10,20 @@ import pixi.extras.TilingSprite;
  */
 class ScrollingBackground extends TilingSprite implements Updatable
 {
-	var speedX:Float;
-	var speedY:Float;
+	public var speed:Point;
+	public var type:Overlap;
 	
 	public function new(texture:Texture, width:Float, height:Float) 
 	{
 		super(texture, width, height);
-		speedX = speedY = 0.0;
-	}
-	
-	public function setSpeed(x:Float = 0.0, y:Float = 0.0)
-	{
-		speedX = x;
-		speedY = y;
+		speed = new Point(0.0, 0.0);
+		
+		type = Overlap.NONE;
 	}
 	
 	public function update(deltaTime:Float)
 	{
-		tilePosition.x += speedX * deltaTime;
-		tilePosition.y += speedY * deltaTime;
+		tilePosition.x += speed.x * deltaTime;
+		tilePosition.y += speed.y * deltaTime;
 	}
 }
