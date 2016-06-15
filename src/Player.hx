@@ -2,23 +2,19 @@ package;
 import pixi.core.math.Point;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
-import Updatable.Overlap;
+import Entity.Overlap;
 
 /**
  * Simple "jumper" player class 
  * @author Tiago Ling Alexandre
  */
-class Player extends Sprite implements Updatable
+class Player extends Entity
 {
-	public var speed:Point;
-	
 	public var jumpSpeed:Float = 8.0;
 	public var maxJumpCharge:Float = 2.0;
 	public var gravity:Float = 5.0;
 	
 	public var isDead:Bool = false;
-	
-	public var type:Overlap;
 	
 	var justPressed:Bool = false;
 	var jumpCharge:Float = 0.0;
@@ -33,7 +29,7 @@ class Player extends Sprite implements Updatable
 		type = Overlap.NONE;
 	}
 	
-	public function update(deltaTime:Float)
+	override public function update(deltaTime:Float)
 	{
 		position.x += speed.x;
 		position.y += speed.y;

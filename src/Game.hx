@@ -8,7 +8,8 @@ import pixi.core.math.Point;
 import pixi.core.sprites.Sprite;
 import pixi.core.text.Text;
 import pixi.core.textures.Texture;
-import Updatable.Overlap;
+import Entity.Overlap;
+import pixi.loaders.Loader;
 
 /**
  * Contains and manages level entities and loop
@@ -35,12 +36,16 @@ class Game extends Container
 	var player:Player;
 	var ground:ScrollingBackground;
 	
-	var entities:Array<Updatable>;
-	var counter:Text;
-	var status:Text;
+	var entities:Array<Entity>;
+	var obstaclePool:Array<Obstacle>;
+	var triggerPool:Array<Trigger>;
 	
 	var gameLayer:Container;
 	var uiLayer:Container;
+	
+	var betStatus:Int = 0;
+	var chillTime:Float = 3.0;
+	var betPanel:BettingPanel;
 	
 	public function new(stageWidth:Float, stageHeight:Float) 
 	{
@@ -56,47 +61,77 @@ class Game extends Container
 	{
 		interactive = true;
 		
-		entities = new Array<Updatable>();
+		entities = new Array<Entity>();
 		gameLayer = new Container();
 		uiLayer = new Container();
 		
-		var bg = new ScrollingBackground(Texture.fromImage('assets/blue_desert.png'), 1024, 1024);
-		bg.position.set(0, -330);
-		bg.speed.set( -50.0, 0.0);
-		entities.push(bg);
-		
-		ground = new ScrollingBackground(Texture.fromImage("assets/ground.png"), 1050, 70);
-		ground.position.set(0, 460);
-		ground.speed.set( -100.0, 0.0);
-		entities.push(ground);
-		
-		player = new Player(0, 0, Texture.fromImage("assets/bunny.png"));
-		player.position.set(256, 288);
-		this.on("mousedown", onTouchStarted);
-		this.on("mouseup", onTouchEnded);
-		entities.push(player);
-		
-		var betPanel:Sprite = new Sprite(Texture.fromImage('assets/betPanel.png'));
-		betPanel.position.set(0.0, 496.0);
-		
-		//Texts
-		counter = new Text(Std.string(tPassed), { font:"40px Arial", fill:"#838796" } );
-		counter.position.set(10.0, 10.0);
-		
-		//Keyboard player control
-		Browser.document.addEventListener('keydown', onKeyDown);
-		Browser.document.addEventListener('keyup', onKeyUp);
-		
-		gameLayer.addChild(bg);
-		getRandomSequence();
-		gameLayer.addChild(player);
-		gameLayer.addChild(ground);
-		
-		uiLayer.addChild(betPanel);
-		uiLayer.addChild(counter);
-		
-		addChild(gameLayer);
-		addChild(uiLayer);
+		var loader:Loader = new Loader();
+		loader.add('bg', 'assets/blue_desert.png');
+		loader.add('ground', 'assets/ground.png');
+		loader.add('player', 'assets/bunny.png');
+		loader.add('block', 'assets/block.png');
+		loader.add('trigger', 'assets/trigger.png');
+		loader.add('panel', 'assets/betPanel.png');
+		loader.add('sBtnUp', 'assets/SmallBtnUp.png');
+		loader.add('sBtnDown', 'assets/SmallBtnDown.png');
+		loader.add('bBtnUp', 'assets/BigBtnUp.png');
+		loader.add('bBtnDown', 'assets/BigBtnDown.png');
+		loader.load(function onComplete() {
+			
+			//Background stuff
+			var bg = new ScrollingBackground(Texture.fromImage('assets/blue_desert.png'), 1024, 1024);
+			bg.position.set(0, -330);
+			bg.speed.set( -50.0, 0.0);
+			entities.push(bg);
+			
+			ground = new ScrollingBackground(Texture.fromImage("assets/ground.png"), 1050, 70);
+			ground.position.set(0, 460);
+			ground.speed.set( -100.0, 0.0);
+			entities.push(ground);
+			
+			//Player
+			player = new Player(0, 0, Texture.fromImage("assets/bunny.png"));
+			player.position.set(256, 288);
+			entities.push(player);
+			
+			//UI
+			betPanel = new BettingPanel();
+			
+			gameLayer.addChild(bg);
+			gameLayer.addChild(player);
+			
+			//Obstacle and Trigger pool setup
+			var poolSize:Int = 10;
+			obstaclePool = new Array<Obstacle>();
+			triggerPool = new Array<Trigger>();
+			for (i in 0...poolSize) {
+				var obA:Obstacle = new Obstacle(Texture.fromImage('assets/block.png'));
+				obstaclePool.push(obA);
+				entities.push(obA);
+				gameLayer.addChild(obA);
+				
+				var obB:Obstacle = new Obstacle(Texture.fromImage('assets/block.png'));
+				obstaclePool.push(obB);
+				entities.push(obB);
+				gameLayer.addChild(obB);
+				
+				var tr:Trigger = new Trigger(Texture.fromImage('assets/trigger.png'));
+				triggerPool.push(tr);
+				entities.push(tr);
+				gameLayer.addChild(tr);
+			}
+			
+			gameLayer.addChild(ground);
+			uiLayer.addChild(betPanel);
+			addChild(gameLayer);
+			addChild(uiLayer);
+			
+			//Keyboard player control
+			Browser.document.addEventListener('keydown', onKeyDown);
+			Browser.document.addEventListener('keyup', onKeyUp);
+			
+			canRun = true;
+		} );
 	}
 	
 	public function update(deltaTime:Float)
@@ -107,54 +142,56 @@ class Game extends Container
 		
 		for (obj in entities) obj.update(deltaTime);
 		
-		if (tPassed == target) getRandomSequence();
+		if (tPassed == target) {
+			chillTime -= deltaTime;
+			if (chillTime <= 0.0) {
+				var qty = getRandomSequence();
+				target = tPassed + qty;
+				chillTime = 3.0;
+				betPanel.updateStatus('Betting Opened!', qty);
+			}
+		}
 	}
 	
-	function getRandomSequence()
+	function getRandomSequence():Int
 	{
 		var quantity:Int = 0;
 		var horizontalDistance:Float = 0.0;
 		
 		switch (level) {
 			case 0:
-				horizontalDistance = 210.0;
-				quantity = Data.getRandInt(1, 2);
+				horizontalDistance = 230.0;
+				//quantity = Data.getRandInt(1, 2);
+				quantity = Data.getRandInt(2, 3);
 			case 1:
-				horizontalDistance = 140.0;
+				horizontalDistance = 170.0;
 				quantity = Data.getRandInt(2, 4);
 			case 2:
 				horizontalDistance = Data.getRandInt(0, 1) == 0 ? 140.0 : 70.0;
 				quantity = horizontalDistance == 70.0 ? Data.getRandInt(2, 4) : Data.getRandInt(3, 5);
 			default:
-				horizontalDistance = 70.0;
+				horizontalDistance = 110.0;
 				quantity = Data.getRandInt(4, 6);
 		}
 		
-		//TODO: Use object pool
 		for (i in 0...quantity) {
 			var obX:Float = stageWidth + horizontalDistance * i;
 			var pairPos:Point = Data.pairPositions[Data.getRandInt(0, Data.pairPositions.length - 1)];
 			
-			var obA:Obstacle = new Obstacle(Texture.fromImage('assets/block.png'));
+			var obA:Obstacle = getObstacle();
 			obA.activate(obX, pairPos.x, 100.0);
-			gameLayer.addChild(obA);
-			entities.push(obA);
 			
 			//Trigger
-			var trigger:Trigger = new Trigger(Texture.fromImage('assets/trigger.png'));
-			trigger.position.set(obX + 17.5, pairPos.y - 115.0);
-			gameLayer.addChild(trigger);
-			entities.push(trigger);
+			var trigger:Trigger = getTrigger();
+			//TODO: Fix this hack
+			var trigY:Float = Math.abs(pairPos.y) > 1000.0 ? pairPos.x + obA.height : pairPos.y - 115.0;
+			trigger.activate(obX + 17.5, trigY);
 			
-			var obB:Obstacle = new Obstacle(Texture.fromImage('assets/block.png'));
+			var obB:Obstacle = getObstacle();
 			obB.activate(obX, pairPos.y, 100.0);
-			gameLayer.addChild(obB);
-			entities.push(obB);
 		}
 		
-		tPassed = 0;
-		target = quantity;
-		counter.text = Std.string(tPassed);
+		return quantity;
 	}
 	
 	function checkCollision() 
@@ -191,11 +228,16 @@ class Game extends Container
 						case Overlap.TRIGGER:
 							//Update text
 							tPassed += 1;
-							counter.text = Std.string(tPassed);
+							betPanel.updateCounter(tPassed);
 							
 							//Disable the trigger once set
 							spr.visible = false;
 							entity.type = Overlap.NONE;
+							
+							if (betStatus == 0) {
+								betStatus = 1;
+								betPanel.updateStatus('Betting Closed!', 0);
+							}
 						default:
 							
 					}
@@ -213,32 +255,39 @@ class Game extends Container
 		}
 	}
 	
-	//Player jump and charge handlers
-	function onTouchStarted(event) 
+	function getObstacle():Obstacle
 	{
-		player.chargeJump();
+		for (ob in obstaclePool) {
+			if (!ob.isActive)
+				return ob;
+		}
+		
+		var obstacle:Obstacle = new Obstacle(Texture.fromImage('assets/block.png'));
+		obstaclePool.push(obstacle);
+		return obstacle;
 	}
-
-	function onTouchEnded(event) 
+	
+	function getTrigger():Trigger
 	{
-		player.jump();
+		for (tr in triggerPool) {
+			if (!tr.isActive)
+				return tr;
+		}
+		
+		var trigger:Trigger = new Trigger(Texture.fromImage('assets/trigger.png'));
+		triggerPool.push(trigger);
+		return trigger;
 	}
 	
 	function onKeyDown(e:KeyboardEvent):Void 
 	{
-		if (e.charCode == 0) {
-			
-			//Jump
+		if (e.keyCode == 32)
 			player.chargeJump();
-		}
 	}
 	
 	function onKeyUp(e:KeyboardEvent):Void 
 	{
-		if (e.charCode == 0) {
-			
-			//Jump
+		if (e.keyCode == 32)
 			player.jump();
-		}
 	}
 }

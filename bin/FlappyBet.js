@@ -6,6 +6,141 @@ function $extend(from, fields) {
 	if( fields.toString !== Object.prototype.toString ) proto.toString = fields.toString;
 	return proto;
 }
+var BettingPanel = function() {
+	PIXI.Container.call(this);
+	this.init();
+};
+BettingPanel.__name__ = true;
+BettingPanel.__super__ = PIXI.Container;
+BettingPanel.prototype = $extend(PIXI.Container.prototype,{
+	init: function() {
+		this.pAMoney = 7500;
+		this.pBMoney = 7500;
+		this.betAmount = 1000;
+		var betPanel = new PIXI.Sprite(PIXI.Texture.fromImage("assets/betPanel.png"));
+		betPanel.position.set(0.0,496.0);
+		this.addChild(betPanel);
+		this.lowerBet = new Button(PIXI.Texture.fromImage("assets/SmallBtnUp.png"),PIXI.Texture.fromImage("assets/SmallBtnDown.png"),"-",new PIXI.Point(0.0,-2.0));
+		this.lowerBet.position.set(549.0,512.0);
+		this.lowerBet.on("click",$bind(this,this.onBetLowered));
+		this.addChild(this.lowerBet);
+		this.raiseBet = new Button(PIXI.Texture.fromImage("assets/SmallBtnUp.png"),PIXI.Texture.fromImage("assets/SmallBtnDown.png"),"+");
+		this.raiseBet.position.set(744.0,512.0);
+		this.raiseBet.on("click",$bind(this,this.onBetRaised));
+		this.addChild(this.raiseBet);
+		this.placeBet = new Button(PIXI.Texture.fromImage("assets/BigBtnUp.png"),PIXI.Texture.fromImage("assets/BigBtnDown.png"),"Place Bet");
+		this.placeBet.position.set(819.0,512.0);
+		this.placeBet.on("click",$bind(this,this.onBetPlaced));
+		this.addChild(this.placeBet);
+		this.topPlayer = new PIXI.Text("Player 1",{ font : "bold 28px Arial", fill : "#333333"});
+		this.topPlayer.position.set(10.0,10.0);
+		this.addChild(this.topPlayer);
+		this.tpMoney = new PIXI.Text("$" + Std.string(this.pAMoney),{ font : "bold 24px Arial", fill : "#333333"});
+		this.tpMoney.position.set(10.0,41.0);
+		this.addChild(this.tpMoney);
+		this.counter = new PIXI.Text("0",{ font : "bold 28px Arial", fill : "#333333"});
+		this.counter.position.set(994.0,10.0);
+		this.addChild(this.counter);
+		this.bottomPlayer = new PIXI.Text("Player 2",{ font : "bold 28px Arial", fill : "#333333"});
+		this.bottomPlayer.position.set(10.0,504.0);
+		this.addChild(this.bottomPlayer);
+		this.bpMoney = new PIXI.Text("$" + Std.string(this.pBMoney),{ font : "bold 24px Arial", fill : "#333333"});
+		this.bpMoney.position.set(10.0,535.0);
+		this.addChild(this.bpMoney);
+		this.status = new PIXI.Text("Betting Open!",{ font : "bold 28px Arial", fill : "#333333"});
+		this.status.position.set(412.0,10.0);
+		this.addChild(this.status);
+		this.betTitle = new PIXI.Text("Current Bet",{ font : "bold 13px Arial", fill : "#333333"});
+		this.betTitle.position.set(298.0,512.0);
+		this.addChild(this.betTitle);
+		this.betBody = new PIXI.Text("Will fail in one of the next X!",{ font : "24px Arial", fill : "#333333"});
+		this.betBody.position.set(185.0,530.0);
+		this.addChild(this.betBody);
+		this.amountTitle = new PIXI.Text("Amount",{ font : "13px Arial", fill : "#333333"});
+		this.amountTitle.position.set(650.0,512.0);
+		this.addChild(this.amountTitle);
+		this.amountBody = new PIXI.Text("$" + Std.string(this.betAmount),{ font : "bold 24px Arial", fill : "#333333"});
+		this.amountBody.position.set(635.0,530.0);
+		this.addChild(this.amountBody);
+	}
+	,onBetPlaced: function() {
+		this.updatePBMoney(-this.betAmount);
+		this.lowerBet.setEnabled(false);
+		this.raiseBet.setEnabled(false);
+		this.placeBet.setEnabled(false);
+	}
+	,onBetLowered: function() {
+		this.betAmount -= 500;
+		this.amountBody.text = "$" + Std.string(this.betAmount);
+	}
+	,onBetRaised: function() {
+		this.betAmount += 500;
+		this.amountBody.text = "$" + Std.string(this.betAmount);
+	}
+	,updatePAMoney: function(value) {
+		this.tpMoney.text = "$" + Std.string(this.pAMoney + value);
+	}
+	,updatePBMoney: function(value) {
+		this.bpMoney.text = "$" + Std.string(this.pBMoney + value);
+	}
+	,updateCounter: function(value) {
+		if(value == null) this.counter.text = "null"; else this.counter.text = "" + value;
+	}
+	,updateStatus: function(text,qty) {
+		this.status.text = text;
+		this.betBody.text = "Will fail in one of the next " + qty + "!";
+	}
+	,updateBetBody: function() {
+	}
+	,__class__: BettingPanel
+});
+var Entity = function(texture) {
+	PIXI.Sprite.call(this,texture);
+};
+Entity.__name__ = true;
+Entity.__super__ = PIXI.Sprite;
+Entity.prototype = $extend(PIXI.Sprite.prototype,{
+	update: function(deltaTime) {
+	}
+	,__class__: Entity
+});
+var Button = function(upTex,downTex,txt,offset) {
+	Entity.call(this,upTex);
+	this.upTex = upTex;
+	this.downTex = downTex;
+	this.buttonMode = true;
+	this.interactive = true;
+	if(offset == null) offset = new PIXI.Point(0.0,0.0);
+	this.label = new PIXI.Text(txt,{ font : "bold 28px Arial", fill : "#333333"});
+	this.label.position.set(this.width / 2 - this.label.width / 2 + offset.x,this.height / 2 - this.label.height / 2 + offset.y);
+	this.addChild(this.label);
+	this.on("mousedown",$bind(this,this.onDown));
+	this.on("mouseup",$bind(this,this.onUp));
+	this.on("mouseupoutside",$bind(this,this.onUp));
+};
+Button.__name__ = true;
+Button.__super__ = Entity;
+Button.prototype = $extend(Entity.prototype,{
+	update: function(deltaTime) {
+	}
+	,setText: function(txt) {
+		this.label.text = txt;
+	}
+	,setEnabled: function(value) {
+		if(value) this.tint = 16777215; else this.tint = 3355443;
+		this.interactive = value;
+		this.buttonMode = value;
+	}
+	,onDown: function(e) {
+		this.texture = this.downTex;
+		this.position.y += 4.0;
+	}
+	,onUp: function(e) {
+		this.texture = this.upTex;
+		this.position.y -= 4.0;
+	}
+	,__class__: Button
+});
 var Data = function() {
 };
 Data.__name__ = true;
@@ -15,7 +150,22 @@ Data.getRandInt = function(min,max) {
 Data.prototype = {
 	__class__: Data
 };
+var Overlap = { __ename__ : true, __constructs__ : ["NONE","PICKUP","OBSTACLE","TRIGGER"] };
+Overlap.NONE = ["NONE",0];
+Overlap.NONE.toString = $estr;
+Overlap.NONE.__enum__ = Overlap;
+Overlap.PICKUP = ["PICKUP",1];
+Overlap.PICKUP.toString = $estr;
+Overlap.PICKUP.__enum__ = Overlap;
+Overlap.OBSTACLE = ["OBSTACLE",2];
+Overlap.OBSTACLE.toString = $estr;
+Overlap.OBSTACLE.__enum__ = Overlap;
+Overlap.TRIGGER = ["TRIGGER",3];
+Overlap.TRIGGER.toString = $estr;
+Overlap.TRIGGER.__enum__ = Overlap;
 var Game = function(stageWidth,stageHeight) {
+	this.chillTime = 3.0;
+	this.betStatus = 0;
 	this.canRun = false;
 	this.target = 0;
 	this.tPassed = 0;
@@ -30,37 +180,69 @@ Game.__name__ = true;
 Game.__super__ = PIXI.Container;
 Game.prototype = $extend(PIXI.Container.prototype,{
 	init: function() {
+		var _g = this;
 		this.interactive = true;
 		this.entities = [];
 		this.gameLayer = new PIXI.Container();
 		this.uiLayer = new PIXI.Container();
-		var bg = new ScrollingBackground(PIXI.Texture.fromImage("assets/blue_desert.png"),1024,1024);
-		bg.position.set(0,-330);
-		bg.speed.set(-50.0,0.0);
-		this.entities.push(bg);
-		this.ground = new ScrollingBackground(PIXI.Texture.fromImage("assets/ground.png"),1050,70);
-		this.ground.position.set(0,460);
-		this.ground.speed.set(-100.0,0.0);
-		this.entities.push(this.ground);
-		this.player = new Player(0,0,PIXI.Texture.fromImage("assets/bunny.png"));
-		this.player.position.set(256,288);
-		this.on("mousedown",$bind(this,this.onTouchStarted));
-		this.on("mouseup",$bind(this,this.onTouchEnded));
-		this.entities.push(this.player);
-		var betPanel = new PIXI.Sprite(PIXI.Texture.fromImage("assets/betPanel.png"));
-		betPanel.position.set(0.0,496.0);
-		this.counter = new PIXI.Text(Std.string(this.tPassed),{ font : "40px Arial", fill : "#838796"});
-		this.counter.position.set(10.0,10.0);
-		window.document.addEventListener("keydown",$bind(this,this.onKeyDown));
-		window.document.addEventListener("keyup",$bind(this,this.onKeyUp));
-		this.gameLayer.addChild(bg);
-		this.getRandomSequence();
-		this.gameLayer.addChild(this.player);
-		this.gameLayer.addChild(this.ground);
-		this.uiLayer.addChild(betPanel);
-		this.uiLayer.addChild(this.counter);
-		this.addChild(this.gameLayer);
-		this.addChild(this.uiLayer);
+		var loader = new PIXI.loaders.Loader();
+		loader.add("bg","assets/blue_desert.png");
+		loader.add("ground","assets/ground.png");
+		loader.add("player","assets/bunny.png");
+		loader.add("block","assets/block.png");
+		loader.add("trigger","assets/trigger.png");
+		loader.add("panel","assets/betPanel.png");
+		loader.add("sBtnUp","assets/SmallBtnUp.png");
+		loader.add("sBtnDown","assets/SmallBtnDown.png");
+		loader.add("bBtnUp","assets/BigBtnUp.png");
+		loader.add("bBtnDown","assets/BigBtnDown.png");
+		loader.load((function($this) {
+			var $r;
+			var onComplete = function() {
+				var bg = new ScrollingBackground(PIXI.Texture.fromImage("assets/blue_desert.png"),1024,1024);
+				bg.position.set(0,-330);
+				bg.speed.set(-50.0,0.0);
+				_g.entities.push(bg);
+				_g.ground = new ScrollingBackground(PIXI.Texture.fromImage("assets/ground.png"),1050,70);
+				_g.ground.position.set(0,460);
+				_g.ground.speed.set(-100.0,0.0);
+				_g.entities.push(_g.ground);
+				_g.player = new Player(0,0,PIXI.Texture.fromImage("assets/bunny.png"));
+				_g.player.position.set(256,288);
+				_g.entities.push(_g.player);
+				_g.betPanel = new BettingPanel();
+				_g.gameLayer.addChild(bg);
+				_g.gameLayer.addChild(_g.player);
+				var poolSize = 10;
+				_g.obstaclePool = [];
+				_g.triggerPool = [];
+				var _g1 = 0;
+				while(_g1 < poolSize) {
+					var i = _g1++;
+					var obA = new Obstacle(PIXI.Texture.fromImage("assets/block.png"));
+					_g.obstaclePool.push(obA);
+					_g.entities.push(obA);
+					_g.gameLayer.addChild(obA);
+					var obB = new Obstacle(PIXI.Texture.fromImage("assets/block.png"));
+					_g.obstaclePool.push(obB);
+					_g.entities.push(obB);
+					_g.gameLayer.addChild(obB);
+					var tr = new Trigger(PIXI.Texture.fromImage("assets/trigger.png"));
+					_g.triggerPool.push(tr);
+					_g.entities.push(tr);
+					_g.gameLayer.addChild(tr);
+				}
+				_g.gameLayer.addChild(_g.ground);
+				_g.uiLayer.addChild(_g.betPanel);
+				_g.addChild(_g.gameLayer);
+				_g.addChild(_g.uiLayer);
+				window.document.addEventListener("keydown",$bind(_g,_g.onKeyDown));
+				window.document.addEventListener("keyup",$bind(_g,_g.onKeyUp));
+				_g.canRun = true;
+			};
+			$r = onComplete;
+			return $r;
+		}(this)));
 	}
 	,update: function(deltaTime) {
 		if(!this.canRun) return;
@@ -72,7 +254,15 @@ Game.prototype = $extend(PIXI.Container.prototype,{
 			++_g;
 			obj.update(deltaTime);
 		}
-		if(this.tPassed == this.target) this.getRandomSequence();
+		if(this.tPassed == this.target) {
+			this.chillTime -= deltaTime;
+			if(this.chillTime <= 0.0) {
+				var qty = this.getRandomSequence();
+				this.target = this.tPassed + qty;
+				this.chillTime = 3.0;
+				this.betPanel.updateStatus("Betting Opened!",qty);
+			}
+		}
 	}
 	,getRandomSequence: function() {
 		var quantity = 0;
@@ -80,11 +270,11 @@ Game.prototype = $extend(PIXI.Container.prototype,{
 		var _g = this.level;
 		switch(_g) {
 		case 0:
-			horizontalDistance = 210.0;
-			quantity = Data.getRandInt(1,2);
+			horizontalDistance = 230.0;
+			quantity = Data.getRandInt(2,3);
 			break;
 		case 1:
-			horizontalDistance = 140.0;
+			horizontalDistance = 170.0;
 			quantity = Data.getRandInt(2,4);
 			break;
 		case 2:
@@ -92,7 +282,7 @@ Game.prototype = $extend(PIXI.Container.prototype,{
 			if(horizontalDistance == 70.0) quantity = Data.getRandInt(2,4); else quantity = Data.getRandInt(3,5);
 			break;
 		default:
-			horizontalDistance = 70.0;
+			horizontalDistance = 110.0;
 			quantity = Data.getRandInt(4,6);
 		}
 		var _g1 = 0;
@@ -100,22 +290,16 @@ Game.prototype = $extend(PIXI.Container.prototype,{
 			var i = _g1++;
 			var obX = this.stageWidth + horizontalDistance * i;
 			var pairPos = Data.pairPositions[Data.getRandInt(0,Data.pairPositions.length - 1)];
-			var obA = new Obstacle(PIXI.Texture.fromImage("assets/block.png"));
+			var obA = this.getObstacle();
 			obA.activate(obX,pairPos.x,100.0);
-			this.gameLayer.addChild(obA);
-			this.entities.push(obA);
-			var trigger = new Trigger(PIXI.Texture.fromImage("assets/trigger.png"));
-			trigger.position.set(obX + 17.5,pairPos.y - 115.0);
-			this.gameLayer.addChild(trigger);
-			this.entities.push(trigger);
-			var obB = new Obstacle(PIXI.Texture.fromImage("assets/block.png"));
+			var trigger = this.getTrigger();
+			var trigY;
+			if(Math.abs(pairPos.y) > 1000.0) trigY = pairPos.x + obA.height; else trigY = pairPos.y - 115.0;
+			trigger.activate(obX + 17.5,trigY);
+			var obB = this.getObstacle();
 			obB.activate(obX,pairPos.y,100.0);
-			this.gameLayer.addChild(obB);
-			this.entities.push(obB);
 		}
-		this.tPassed = 0;
-		this.target = quantity;
-		this.counter.text = Std.string(this.tPassed);
+		return quantity;
 	}
 	,checkCollision: function() {
 		var pHalfW = this.player.width / 2;
@@ -149,9 +333,13 @@ Game.prototype = $extend(PIXI.Container.prototype,{
 						break;
 					case 3:
 						this.tPassed += 1;
-						this.counter.text = Std.string(this.tPassed);
+						this.betPanel.updateCounter(this.tPassed);
 						spr.visible = false;
 						entity.type = Overlap.NONE;
+						if(this.betStatus == 0) {
+							this.betStatus = 1;
+							this.betPanel.updateStatus("Betting Closed!",0);
+						}
 						break;
 					default:
 					}
@@ -169,17 +357,35 @@ Game.prototype = $extend(PIXI.Container.prototype,{
 			e.speed.set(0.0,0.0);
 		}
 	}
-	,onTouchStarted: function(event) {
-		this.player.chargeJump();
+	,getObstacle: function() {
+		var _g = 0;
+		var _g1 = this.obstaclePool;
+		while(_g < _g1.length) {
+			var ob = _g1[_g];
+			++_g;
+			if(!ob.isActive) return ob;
+		}
+		var obstacle = new Obstacle(PIXI.Texture.fromImage("assets/block.png"));
+		this.obstaclePool.push(obstacle);
+		return obstacle;
 	}
-	,onTouchEnded: function(event) {
-		this.player.jump();
+	,getTrigger: function() {
+		var _g = 0;
+		var _g1 = this.triggerPool;
+		while(_g < _g1.length) {
+			var tr = _g1[_g];
+			++_g;
+			if(!tr.isActive) return tr;
+		}
+		var trigger = new Trigger(PIXI.Texture.fromImage("assets/trigger.png"));
+		this.triggerPool.push(trigger);
+		return trigger;
 	}
 	,onKeyDown: function(e) {
-		if(e.charCode == 0) this.player.chargeJump();
+		if(e.keyCode == 32) this.player.chargeJump();
 	}
 	,onKeyUp: function(e) {
-		if(e.charCode == 0) this.player.jump();
+		if(e.keyCode == 32) this.player.jump();
 	}
 	,__class__: Game
 });
@@ -314,7 +520,6 @@ Main.prototype = $extend(pixi_plugins_app_Application.prototype,{
 		this.renderer.view.style.transform = "translate3d( -50%, -25%, 0 )";
 		this.game = new Game(this.width,this.height);
 		this.stage.addChild(this.game);
-		this.game.canRun = true;
 	}
 	,_onUpdate: function(elapsedTime) {
 		this.dt = (elapsedTime - this.lastElapsed) / 1000.0;
@@ -324,21 +529,16 @@ Main.prototype = $extend(pixi_plugins_app_Application.prototype,{
 	,__class__: Main
 });
 Math.__name__ = true;
-var Updatable = function() { };
-Updatable.__name__ = true;
-Updatable.prototype = {
-	__class__: Updatable
-};
 var Obstacle = function(texture) {
-	PIXI.Sprite.call(this,texture);
-	this.isActive = false;
+	Entity.call(this,texture);
 	this.type = Overlap.OBSTACLE;
-	this.speed = new PIXI.Point(100.0,0.0);
+	this.speed = new PIXI.Point(0.0,0.0);
+	this.isActive = false;
+	this.visible = false;
 };
 Obstacle.__name__ = true;
-Obstacle.__interfaces__ = [Updatable];
-Obstacle.__super__ = PIXI.Sprite;
-Obstacle.prototype = $extend(PIXI.Sprite.prototype,{
+Obstacle.__super__ = Entity;
+Obstacle.prototype = $extend(Entity.prototype,{
 	update: function(deltaTime) {
 		if(!this.isActive) return;
 		this.position.x -= this.speed.x * deltaTime;
@@ -354,6 +554,7 @@ Obstacle.prototype = $extend(PIXI.Sprite.prototype,{
 		if(newY == null) newY = 0.0;
 		if(newX == null) newX = 0.0;
 		this.speed.x = speedX;
+		this.speed.y = speedY;
 		this.position.set(newX,newY);
 		this.isActive = true;
 		this.visible = true;
@@ -560,15 +761,14 @@ var Player = function(speedX,speedY,texture) {
 	this.gravity = 5.0;
 	this.maxJumpCharge = 2.0;
 	this.jumpSpeed = 8.0;
-	PIXI.Sprite.call(this,texture);
+	Entity.call(this,texture);
 	this.anchor.set(0.5,0.5);
 	this.speed = new PIXI.Point(speedX,speedY);
 	this.type = Overlap.NONE;
 };
 Player.__name__ = true;
-Player.__interfaces__ = [Updatable];
-Player.__super__ = PIXI.Sprite;
-Player.prototype = $extend(PIXI.Sprite.prototype,{
+Player.__super__ = Entity;
+Player.prototype = $extend(Entity.prototype,{
 	update: function(deltaTime) {
 		this.position.x += this.speed.x;
 		this.position.y += this.speed.y;
@@ -615,17 +815,18 @@ Reflect.callMethod = function(o,func,args) {
 	return func.apply(o,args);
 };
 var ScrollingBackground = function(texture,width,height) {
-	PIXI.extras.TilingSprite.call(this,texture,width,height);
+	Entity.call(this,null);
 	this.speed = new PIXI.Point(0.0,0.0);
 	this.type = Overlap.NONE;
+	this.tSpr = new PIXI.extras.TilingSprite(texture,width,height);
+	this.addChild(this.tSpr);
 };
 ScrollingBackground.__name__ = true;
-ScrollingBackground.__interfaces__ = [Updatable];
-ScrollingBackground.__super__ = PIXI.extras.TilingSprite;
-ScrollingBackground.prototype = $extend(PIXI.extras.TilingSprite.prototype,{
+ScrollingBackground.__super__ = Entity;
+ScrollingBackground.prototype = $extend(Entity.prototype,{
 	update: function(deltaTime) {
-		this.tilePosition.x += this.speed.x * deltaTime;
-		this.tilePosition.y += this.speed.y * deltaTime;
+		this.tSpr.tilePosition.x += this.speed.x * deltaTime;
+		this.tSpr.tilePosition.y += this.speed.y * deltaTime;
 	}
 	,__class__: ScrollingBackground
 });
@@ -635,19 +836,16 @@ Std.string = function(s) {
 	return js_Boot.__string_rec(s,"");
 };
 var Trigger = function(texture) {
-	PIXI.Sprite.call(this,texture);
-	this.init();
+	Entity.call(this,texture);
+	this.type = Overlap.TRIGGER;
+	this.speed = new PIXI.Point(0.0,0.0);
+	this.isActive = false;
+	this.visible = false;
 };
 Trigger.__name__ = true;
-Trigger.__interfaces__ = [Updatable];
-Trigger.__super__ = PIXI.Sprite;
-Trigger.prototype = $extend(PIXI.Sprite.prototype,{
-	init: function() {
-		this.type = Overlap.TRIGGER;
-		this.speed = new PIXI.Point(100.0,0.0);
-		this.isActive = true;
-	}
-	,update: function(deltaTime) {
+Trigger.__super__ = Entity;
+Trigger.prototype = $extend(Entity.prototype,{
+	update: function(deltaTime) {
 		if(!this.isActive) return;
 		this.position.x -= this.speed.x * deltaTime;
 		if(this.position.x <= -this.width) {
@@ -656,21 +854,19 @@ Trigger.prototype = $extend(PIXI.Sprite.prototype,{
 			this.isActive = false;
 		}
 	}
+	,activate: function(newX,newY,speedX,speedY) {
+		if(speedY == null) speedY = 0.0;
+		if(speedX == null) speedX = 0.0;
+		if(newY == null) newY = 0.0;
+		if(newX == null) newX = 0.0;
+		this.speed.x = speedX;
+		this.speed.y = speedY;
+		this.position.set(newX,newY);
+		this.isActive = true;
+		this.visible = true;
+	}
 	,__class__: Trigger
 });
-var Overlap = { __ename__ : true, __constructs__ : ["NONE","PICKUP","OBSTACLE","TRIGGER"] };
-Overlap.NONE = ["NONE",0];
-Overlap.NONE.toString = $estr;
-Overlap.NONE.__enum__ = Overlap;
-Overlap.PICKUP = ["PICKUP",1];
-Overlap.PICKUP.toString = $estr;
-Overlap.PICKUP.__enum__ = Overlap;
-Overlap.OBSTACLE = ["OBSTACLE",2];
-Overlap.OBSTACLE.toString = $estr;
-Overlap.OBSTACLE.__enum__ = Overlap;
-Overlap.TRIGGER = ["TRIGGER",3];
-Overlap.TRIGGER.toString = $estr;
-Overlap.TRIGGER.__enum__ = Overlap;
 var js__$Boot_HaxeError = function(val) {
 	Error.call(this);
 	this.val = val;
@@ -834,7 +1030,7 @@ var Bool = Boolean;
 Bool.__ename__ = ["Bool"];
 var Class = { __name__ : ["Class"]};
 var Enum = { };
-Data.pairPositions = [new PIXI.Point(-35.0,460.0),new PIXI.Point(-150.0,345.0),new PIXI.Point(-265.0,230.0),new PIXI.Point(-3800.0,115.0)];
+Data.pairPositions = [new PIXI.Point(-35.0,4600.0),new PIXI.Point(-150.0,345.0),new PIXI.Point(-265.0,230.0),new PIXI.Point(-3800.0,115.0)];
 Data.levelTimes = [20.0,15.0,10.0,55.0];
 pixi_plugins_app_Application.AUTO = "auto";
 pixi_plugins_app_Application.RECOMMENDED = "recommended";

@@ -41,8 +41,6 @@ class Main extends Application
 		
 		game = new Game(width, height);
 		stage.addChild(game);
-		
-		game.canRun = true;
 	}
 	
 	function _onUpdate(elapsedTime:Float) 

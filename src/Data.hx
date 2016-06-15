@@ -13,7 +13,7 @@ class Data
 	 * Each Point holds the Y position of the top and bottom obstacles respectively
 	 */
 	public static var pairPositions:Array<Point> = [
-		new Point( -35.0, 460.0),
+		new Point( -35.0, 4600.0),
 		new Point(-150.0, 345.0),
 		new Point(-265.0, 230.0),
 		new Point(-3800.0, 115.0)
