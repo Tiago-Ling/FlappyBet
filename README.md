@@ -28,3 +28,9 @@ Compiling
 * Windows / Flash Develop - Double-click the `FlappyBet.hxproj` file and run the game from the editr
 * Command line - To build the game open a command line in the project root folder and run `haxe Build.hxml`. The game must be run from a web server.
  
+Credits
+=======
+* Game music from http://freesound.org/
+* Game sfx procedurally generated with Bfxr: http://www.bfxr.net/
+* Game art from Kenney's Assets: http://www.kenney.nl/assets
+* Bunny art got from Pixi.js Haxe samples: https://github.com/pixijs/pixi-haxe/tree/dev/samples
