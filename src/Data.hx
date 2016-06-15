@@ -12,11 +12,19 @@ class Data
 	 * Ordered from top to bottom
 	 * Each Point holds the Y position of the top and bottom obstacles respectively
 	 */
-	public static var pairPositions:Array<Point> = [
+/*	public static var pairPositions:Array<Point> = [
 		new Point( -35.0, 4600.0),
 		new Point(-150.0, 345.0),
 		new Point(-265.0, 230.0),
 		new Point(-3800.0, 115.0)
+	];*/ //No hidden obstacles (bug: player might pass without completing challenge)
+	
+	//Hidden obstacles when only one of the pair is visible
+	public static var pairPositions:Array<Point> = [
+		new Point( -35.0, 460.0),
+		new Point(-150.0, 345.0),
+		new Point(-265.0, 230.0),
+		new Point(-380.0, 115.0)
 	];
 	
 	public static var levelTimes:Array<Float> = [20.0, 15.0, 10.0, 55.0];

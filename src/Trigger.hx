@@ -10,9 +10,7 @@ import Entity.Overlap;
  * @author Tiago Ling Alexandre
  */
 class Trigger extends Entity
-{
-	public var isActive:Bool;
-	
+{	
 	public function new(texture:Texture)
 	{
 		super(texture);
@@ -42,6 +40,7 @@ class Trigger extends Entity
 		position.set(newX, newY);
 		isActive = true;
 		visible = true;
+		type = Overlap.TRIGGER;
 	}
 	
 }

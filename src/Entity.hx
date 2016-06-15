@@ -15,9 +15,13 @@ class Entity extends Sprite
 	//Movement speed
 	public var speed:Point;
 	
+	public var isActive:Bool;
+	
 	public function new(texture:Texture) 
 	{
 		super(texture);
+		isActive = true;
+		speed = new Point(0.0, 0.0);
 	}
 
 	public function update(deltaTime:Float)

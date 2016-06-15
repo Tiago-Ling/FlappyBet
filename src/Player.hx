@@ -1,4 +1,5 @@
 package;
+import howler.Howl;
 import pixi.core.math.Point;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
@@ -18,10 +19,12 @@ class Player extends Entity
 	
 	var justPressed:Bool = false;
 	var jumpCharge:Float = 0.0;
+	var jumpSnd:Howl;
 	
-	public function new(speedX:Float, speedY:Float, texture:Texture) 
+	public function new(speedX:Float, speedY:Float, texture:Texture, jumpSnd:Howl) 
 	{
 		super(texture);
+		this.jumpSnd = jumpSnd;
 		
 		anchor.set(0.5, 0.5);
 		speed = new Point(speedX, speedY);
@@ -70,6 +73,7 @@ class Player extends Entity
 		if (jumpCharge > maxJumpCharge) jumpCharge = maxJumpCharge;
 		speed.y -= (jumpSpeed * jumpCharge) + speed.y / 2;
 		justPressed = false;
+		jumpSnd.play();
 	}
 	
 	/**

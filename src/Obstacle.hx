@@ -10,8 +10,6 @@ import Entity.Overlap;
  */
 class Obstacle extends Entity
 {
-	public var isActive:Bool;
-	
 	public function new(texture:Texture) 
 	{
 		super(texture);

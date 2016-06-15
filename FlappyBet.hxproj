@@ -29,6 +29,7 @@
   <!-- haxelib libraries -->
   <haxelib>
     <library name="-lib pixijs" />
+    <library name="-lib howlerjs" />
     <library name="-lib perf.js" />
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->

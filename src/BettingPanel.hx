@@ -1,4 +1,5 @@
 package;
+import howler.Howl;
 import pixi.core.display.Container;
 import pixi.core.math.Point;
 import pixi.core.sprites.Sprite;
@@ -6,7 +7,7 @@ import pixi.core.text.Text;
 import pixi.core.textures.Texture;
 
 /**
- * ...
+ * Holds all Betting UI and handles gambling logic
  * @author Tiago Ling Alexandre
  */
 class BettingPanel extends Container
@@ -22,26 +23,40 @@ class BettingPanel extends Container
 	var amountTitle:Text;
 	var counter:Text;
 	
-	var pAMoney:Int;
-	var pBMoney:Int;
+	public var pPlayingMoney:Int;
+	public var pGamblingMoney:Int;
+	
 	var betAmount:Int;
 	
 	var placeBet:Button;
 	var raiseBet:Button;
 	var lowerBet:Button;
 	
-	public function new() 
+	var currentBet:Bet;
+	public var betChoice:Bet;
+	
+	var betSuccess:Howl;
+	var betFail:Howl;
+	
+	//Which player is currently gambling
+	var gambler:Int;
+	
+	public function new(betSuccess:Howl, betFail:Howl, gambler:Int, pMoney:Int, gMoney:Int) 
 	{
 		super();
+		
+		this.betSuccess = betSuccess;
+		this.betFail = betFail;
+		this.gambler = gambler;
+		pPlayingMoney = pMoney;
+		pGamblingMoney = gMoney;
 		
 		init();
 	}
 	
 	function init() 
 	{
-		pAMoney = 7500;
-		pBMoney = 7500;
-		betAmount = 1000;
+		betAmount = 0;
 		//UI
 		var betPanel:Sprite = new Sprite(Texture.fromImage('assets/betPanel.png'));
 		betPanel.position.set(0.0, 496.0);
@@ -67,7 +82,7 @@ class BettingPanel extends Container
 		topPlayer.position.set(10.0, 10.0);
 		addChild(topPlayer);
 		
-		tpMoney = new Text('$' + Std.string(pAMoney), { font:"bold 24px Arial", fill:"#333333" } );
+		tpMoney = new Text('$' + Std.string(pPlayingMoney), { font:"bold 24px Arial", fill:"#333333" } );
 		tpMoney.position.set(10.0, 41.0);
 		addChild(tpMoney);
 		
@@ -79,19 +94,21 @@ class BettingPanel extends Container
 		bottomPlayer.position.set(10.0, 504.0);
 		addChild(bottomPlayer);
 		
-		bpMoney = new Text('$' + Std.string(pBMoney), { font:"bold 24px Arial", fill:"#333333" } );
+		bpMoney = new Text('$' + Std.string(pGamblingMoney), { font:"bold 24px Arial", fill:"#333333" } );
 		bpMoney.position.set(10.0, 535.0);
 		addChild(bpMoney);
 		
-		status = new Text('Betting Open!', { font:"bold 28px Arial", fill:"#333333" } );
-		status.position.set(412.0, 10.0);
+		status = new Text('Waiting for New Challenge', { font:"bold 28px Arial", fill:"#333333" } );
+		status.style.align = 'center';
+		status.position.set(512.0, 10.0);
+		status.anchor.set(0.5, 0.0);
 		addChild(status);
 		
 		betTitle = new Text('Current Bet', { font:"bold 13px Arial", fill:"#333333" } );
 		betTitle.position.set(298.0, 512.0);
 		addChild(betTitle);
 		
-		betBody = new Text('Will fail in one of the next X!', { font:"24px Arial", fill:"#333333" } );
+		betBody = new Text('No Challenge', { font:"24px Arial", fill:"#333333" } );
 		betBody.position.set(185.0, 530.0);
 		addChild(betBody);
 		
@@ -102,16 +119,59 @@ class BettingPanel extends Container
 		amountBody = new Text('$' + Std.string(betAmount), { font:"bold 24px Arial", fill:"#333333" } );
 		amountBody.position.set(635.0, 530.0);
 		addChild(amountBody);
+		
+		if (gambler == 0) {
+			topPlayer.text = 'Player 1';
+			bottomPlayer.text = 'Player 2';
+			tpMoney.text = '$' + Std.string(pGamblingMoney);
+			bpMoney.text = '$' + Std.string(pPlayingMoney);
+		} else {
+			topPlayer.text = 'Player 2';
+			bottomPlayer.text = 'Player 1';
+			tpMoney.text = '$' + Std.string(pPlayingMoney);
+			bpMoney.text = '$' + Std.string(pGamblingMoney);
+		}
 	}
 	
-	function onBetPlaced()
+	public function onBetPlaced()
 	{
-		updatePBMoney( -betAmount);
+		amountBody.style.fill = '#FF0000';
+		amountBody.text = '$' + Std.string(betAmount);
+		amountTitle.style.fill = '#FF0000';
+		amountTitle.text = 'Amount';
+		
+		if (betAmount == 0) {
+			//If no bet is chosen, auto-place minimum bet
+			betAmount = 500;
+			amountBody.text = '$' + Std.string(betAmount);
+		}
 		
 		//Disable buttons
 		lowerBet.setEnabled(false);
 		raiseBet.setEnabled(false);
 		placeBet.setEnabled(false);
+		
+		//TODO: Allow gambler to choose between fail / success
+		betChoice = currentBet;
+		
+		updateStatus('Bet Placed! Awaiting Results...');
+	}
+	
+	public function openBets()
+	{
+		amountBody.style.fill = '#333333';
+		amountBody.text = amountBody.text;
+		amountTitle.style.fill = '#333333';
+		
+		betAmount = 0;
+		amountBody.text = '$' + Std.string(betAmount);
+		
+		//Enable buttons
+		lowerBet.setEnabled(true);
+		raiseBet.setEnabled(true);
+		placeBet.setEnabled(true);
+		
+		updateStatus('Place your Bet!');
 	}
 	
 	function onBetLowered()
@@ -126,14 +186,16 @@ class BettingPanel extends Container
 		amountBody.text = '$' + Std.string(betAmount);
 	}
 	
-	public function updatePAMoney(value:Int)
+	public function updatePlayingMoney(value:Int)
 	{
-		tpMoney.text = '$' + Std.string(pAMoney + value);
+		pPlayingMoney += value;
+		tpMoney.text = '$' + Std.string(pPlayingMoney);
 	}
 	
-	public function updatePBMoney(value:Int)
+	public function updateGamblingMoney(value:Int)
 	{
-		bpMoney.text = '$' + Std.string(pBMoney + value);
+		pGamblingMoney += value;
+		bpMoney.text = '$' + Std.string(pGamblingMoney);
 	}
 	
 	public function updateCounter(value:Int)
@@ -141,15 +203,82 @@ class BettingPanel extends Container
 		counter.text = Std.string(value);
 	}
 	
-	public function updateStatus(text:String, qty:Int)
+	public function updateStatus(text:String)
 	{
 		status.text = text;
-		betBody.text = 'Will fail in one of the next $qty!';
 	}
 	
-	public function updateBetBody()
+	public function setBetBodyQty(qty:Int)
 	{
-		
+		if (Math.random() > 0.5) {
+			betBody.text = 'Will fail in one of the next $qty!';
+			currentBet = Bet.FAIL;
+		} else {
+			betBody.text = 'Will pass through the next $qty!';
+			currentBet = Bet.SUCCESS;
+		}
 	}
 	
+	public function reduceBetBodyQty()
+	{
+		var qty:Int = Std.parseInt(betBody.text.substr(betBody.text.length - 2, 1));
+		qty = qty > 0 ? qty - 1 : 0;
+		
+		if (currentBet == Bet.SUCCESS)
+			betBody.text = 'Will pass through the next $qty!';
+		else if (currentBet == Bet.FAIL)
+			betBody.text = 'Will fail in one of the next $qty!';
+		
+		if (qty == 0) {
+			setBetResult(Bet.SUCCESS);
+			//updateStatus('Waiting for New Challenge');
+			betBody.text = 'No Challenge';
+		}
+	}
+	
+	//If challenge is done, reward / punish the gambler
+	public function setBetResult(res:Bet)
+	{
+		//If success - Award bet money x 2 to gambler
+		if (res == betChoice) {
+			updateGamblingMoney(betAmount * 2);
+			updatePlayingMoney(-betAmount);
+			betSuccess.play();
+			updateStatus('Player ${gambler + 1} Wins!');
+		} else {
+			//If fail - Award bet money to player
+			updatePlayingMoney(betAmount);
+			updateGamblingMoney( -betAmount);
+			betFail.play();
+			var winner = gambler == 0 ? 2 : 1;
+			updateStatus('Player $winner Wins!');
+		}
+	}
+	
+	public function togglePlayers()
+	{
+		gambler = gambler > 0 ? 0 : 1;
+		if (gambler == 0) {
+			//Change labels
+			topPlayer.text = 'Player 2';
+			bottomPlayer.text = 'Player 1';
+		} else {
+			topPlayer.text = 'Player 1';
+			bottomPlayer.text = 'Player 2';
+		}
+		
+		//Change money
+		var temp = pPlayingMoney;
+		pPlayingMoney = pGamblingMoney;
+		pGamblingMoney = temp;
+		tpMoney.text = '$' + Std.string(pPlayingMoney);
+		bpMoney.text = '$' + Std.string(pGamblingMoney);
+	}
+	
+}
+
+enum Bet {
+	NO_BET;
+	SUCCESS;
+	FAIL;
 }

@@ -46,7 +46,7 @@ class Button extends Entity
 	
 	public function setEnabled(value:Bool)
 	{
-		tint = value ? 0xFFFFFF : 0x333333;
+		tint = value ? 0xFFFFFF : 0x999999;
 		interactive = value;
 		buttonMode = value;
 	}
