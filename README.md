@@ -14,7 +14,10 @@ Controls
 Status
 ======
 Initial, 48-hours version is incomplete. Known bugs / incomplete features:
-* Betting system not working (maybe too ambitious for the deadline)?
+* Betting system not working (apparently too ambitious for the deadline)
+* No "How To" and "Credits" menus
+* No pre-game menu to choose match type (best of 3, single round, etc)
+* Balancing (jump, obstacles, bets)
  
 Dependencies
 ============
